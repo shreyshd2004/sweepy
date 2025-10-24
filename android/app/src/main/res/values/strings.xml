@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">Sweepy</string>
-    <string name="title_activity_main">Sweepy</string>
-    <string name="package_name">com.sweepy.app</string>
-    <string name="custom_url_scheme">com.sweepy.app</string>
-</resources>
