@@ -110,15 +110,15 @@ export function MaterialTable({
           )}
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid grid-cols-2 gap-4">
           {filteredMaterials.map((material) => (
-            <MaterialCard
-              key={material.id}
-              material={material}
-              onView={onView}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
+            <div key={material.id} className="bg-white rounded-xl border border-gray-200 p-4 text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span className="text-green-600 text-2xl">♻️</span>
+              </div>
+              <h3 className="font-semibold text-sm text-gray-900 mb-1">{material.materialName}</h3>
+              <p className="text-xs text-gray-500">{material.similarMaterials.length} similar</p>
+            </div>
           ))}
         </div>
       )}

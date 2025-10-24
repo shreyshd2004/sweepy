@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { MaterialInput } from '@/lib/zodSchemas';
 import { toast } from 'sonner';
 import { ArrowLeft, Database } from 'lucide-react';
+import { BottomNavigation } from '@/components/BottomNavigation';
 
 export default function ScanPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -72,65 +73,51 @@ export default function ScanPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white pb-20">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push('/')}
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
-              </Button>
-              <h1 className="text-2xl font-bold text-gray-900">Add Material</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                onClick={() => router.push('/materials')}
-              >
-                <Database className="w-4 h-4 mr-2" />
-                View Database
-              </Button>
-              <AuthButton user={user} onAuthChange={handleAuthChange} />
-            </div>
-          </div>
+      <div className="bg-white border-b border-gray-200 px-4 py-4">
+        <div className="flex justify-between items-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push('/materials')}
+            className="text-green-600"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          <h1 className="text-lg font-semibold text-gray-900">Scanning Page</h1>
+          <div className="w-16"></div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-sm border p-8">
-            <div className="mb-6">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                Scan & Add Material
-              </h2>
-              <p className="text-gray-600">
-                Upload an image or manually enter details about a recyclable material.
-              </p>
-            </div>
-
-            <MaterialForm
-              onSubmit={handleSubmit}
-              isLoading={isSubmitting}
-            />
-
-            {/* OCR Note */}
-            <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h3 className="font-semibold text-blue-900 mb-2">Future Enhancement</h3>
-              <p className="text-sm text-blue-800">
-                OCR text extraction from images will be available soon. For now, 
-                you can manually enter material information after uploading an image.
-              </p>
-            </div>
+      <div className="px-4 py-6">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
+            <h2 className="text-xl font-bold text-green-600 mb-4">How to Scan</h2>
+            <p className="text-gray-700 mb-4">
+              Point your device's speaker towards the object you want to scan and push 'Start Scan'.
+            </p>
+            <Button className="w-full bg-green-600 hover:bg-green-700 text-white mb-2">
+              Start Scan
+            </Button>
+            <button className="text-sm text-green-600 underline">
+              Where's my speaker?
+            </button>
+            <p className="text-sm text-gray-600 mt-2">
+              Push and listen to where your speaker is.
+            </p>
           </div>
+
+          <MaterialForm
+            onSubmit={handleSubmit}
+            isLoading={isSubmitting}
+          />
         </div>
       </div>
+
+      <BottomNavigation />
     </div>
   );
 }

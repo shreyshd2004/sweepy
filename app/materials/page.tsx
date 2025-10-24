@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { ArrowLeft, Plus } from 'lucide-react';
+import { BottomNavigation } from '@/components/BottomNavigation';
 
 export default function MaterialsPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -139,38 +140,38 @@ export default function MaterialsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white pb-20">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push('/scan')}
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Scan
-              </Button>
-              <h1 className="text-2xl font-bold text-gray-900">Materials Database</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <Button
-                onClick={handleCreateNew}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Material
-              </Button>
-              <AuthButton user={user} onAuthChange={handleAuthChange} />
-            </div>
-          </div>
+      <div className="bg-white border-b border-gray-200 px-4 py-4">
+        <div className="flex justify-between items-center">
+          <h1 className="text-lg font-semibold text-gray-900">Material Catalogue</h1>
+          <Button
+            onClick={handleCreateNew}
+            className="bg-green-600 hover:bg-green-700 text-white"
+            size="sm"
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            Add
+          </Button>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
+      {/* Search Bar */}
+      <div className="px-4 py-4">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search your materials"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+          <svg className="absolute right-3 top-3 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Materials Grid */}
+      <div className="px-4 pb-6">
         <MaterialTable
           materials={materials}
           onView={handleView}
@@ -206,6 +207,8 @@ export default function MaterialsPage() {
           />
         </DialogContent>
       </Dialog>
+
+      <BottomNavigation />
     </div>
   );
 }
