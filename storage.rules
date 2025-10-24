@@ -1,0 +1,11 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Materials images
+    match /materials/{userId}/{allPaths=**} {
+      // Allow read, write, delete only if user is authenticated and owns the file
+      allow read, write, delete: if request.auth != null 
+        && request.auth.uid == userId;
+    }
+  }
+}

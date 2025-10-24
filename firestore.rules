@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Materials collection rules
+    match /materials/{materialId} {
+      // Allow read, write, delete only if user is authenticated and owns the document
+      allow read, write, delete: if request.auth != null 
+        && request.auth.uid == resource.data.ownerUid;
+      
+      // Allow create only if user is authenticated and sets their own UID
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.ownerUid
+        && validateMaterialData(request.resource.data);
+    }
+    
+    // Helper function to validate material data
+    function validateMaterialData(data) {
+      return data.keys().hasAll(['ownerUid', 'materialName', 'howToRecycle', 'discoveredAt', 'similarMaterials', 'createdAt', 'updatedAt'])
+        && data.ownerUid is string
+        && data.materialName is string
+        && data.materialName.size() >= 1
+        && data.materialName.size() <= 100
+        && data.howToRecycle is string
+        && data.howToRecycle.size() <= 2000
+        && data.discoveredAt is timestamp
+        && data.similarMaterials is list
+        && data.similarMaterials.size() <= 20
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        && (data.imagePath == null || data.imagePath is string);
+    }
+  }
+}
