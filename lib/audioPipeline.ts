@@ -104,7 +104,7 @@ export class AudioPipeline {
 
     try {
       // @ts-ignore - Vite handles the import.meta.url
-      const workletUrl = new URL('./recorder-worklet.ts', import.meta.url);
+      const workletUrl = '/worklets/recorder-worklet.js';
       await this.audioContext.audioWorklet.addModule(workletUrl);
       console.log('[Main] Worklet module loaded');
     } catch (error) {
