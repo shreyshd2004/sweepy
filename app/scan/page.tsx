@@ -215,15 +215,6 @@ export default function ScanPage() {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-4">
         <div className="flex justify-between items-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push('/materials')}
-            className="text-green-600"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
           <h1 className="text-lg font-semibold text-gray-900">Scanning Page</h1>
           <div className="w-16"></div>
         </div>
@@ -249,9 +240,9 @@ export default function ScanPage() {
                    onClick={startScan}>
                 <button className="text-white text-2xl font-bold tracking-wide">Start Scan</button>
               </div>
-              <Button variant="outline" onClick={startScan} className="mb-2" disabled={isScanning}>
+              {/*<Button variant="outline" onClick={startScan} className="mb-2" disabled={isScanning}>
                 {isScanning ? 'Scanning...' : 'Start Scan'}
-              </Button>
+              </Button>*/}
               <button className="text-sm text-green-600 underline" onClick={() => toast.info("Try turning up your volume and moving the phone around.")}>Where's my speaker?</button>
               <p className="text-sm text-gray-600 mt-2">Push and listen to where your speaker is.</p>
             </>
