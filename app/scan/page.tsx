@@ -223,6 +223,12 @@ export default function ScanPage() {
       {/* Main Content */}
       <div className="px-4 py-10">
         <div className="max-w-md mx-auto flex flex-col items-center">
+          {/* Help Button */}
+          <div className="w-full flex justify-end mb-6">
+            <Button variant="outline" size="sm" className="bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200" onClick={() => toast.info("Try turning up your volume and moving the phone around.")}>
+              Help
+            </Button>
+          </div>
           {isScanning ? (
             <div className="w-full max-w-sm space-y-4">
               <div className="bg-white rounded-2xl border border-gray-200 p-6 text-center">
