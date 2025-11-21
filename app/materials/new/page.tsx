@@ -564,105 +564,12 @@ export default function NewMaterialPage() {
 
   return (
     <div className="min-h-screen bg-white pb-20">
-      <div className="bg-white border-b border-gray-200 px-4 py-4">
-        <div className="flex items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={() => router.back()} className="text-green-600">
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back
-          </Button>
-          <h1 className="text-lg font-semibold text-gray-900">New Material</h1>
-          <div className="w-16"></div>
-        </div>
-      </div>
-
       <div className="px-4 py-6 max-w-md mx-auto">
-        {hasScannedAudio && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-            <p className="text-xs text-blue-800 font-medium mb-1">📊 Scan Data Ready</p>
-            <p className="text-xs text-blue-700">
-              Your scan data is temporarily saved. Fill out the form below and click "Save" to store it permanently in the database.
-            </p>
-          </div>
-        )}
         <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-4 text-center text-gray-700">
           You Discovered A New Material! Describe it and add a photo.
         </div>
-        <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-4">
-          <h2 className="text-sm font-medium mb-2">Material Audio Scan</h2>
-          {hasScannedAudio && (
-            <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-xs text-green-700">✓ Audio scanned from material identification</p>
-            </div>
-          )}
-          
-          {isScanning ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Loader2 className="w-5 h-5 text-green-600 animate-spin" />
-                <span className="text-sm text-gray-700">{scanStep}</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-green-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {!hasScannedAudio ? (
-                <>
-                  <Button 
-                    onClick={startMaterialScan} 
-                    className="w-full bg-green-600 hover:bg-green-700 text-white"
-                    disabled={isScanning}
-                  >
-                    {isScanning ? 'Scanning...' : '🔊 Scan Material with Audio'}
-                  </Button>
-                  <p className="text-xs text-gray-500 text-center">
-                    Use advanced audio scanning to identify the material, or record manually below.
-                  </p>
-                  <div className="border-t pt-3 mt-3">
-                    <p className="text-xs text-gray-500 mb-2">Or record manually:</p>
-                    <div className="flex items-center gap-2">
-                      {!isRecording ? (
-                        <Button 
-                          onClick={startRecording} 
-                          variant="outline"
-                          className="flex-1"
-                        >
-                          Start Manual Recording
-                        </Button>
-                      ) : (
-                        <div className="flex items-center gap-2 w-full">
-                          <Button onClick={stopRecording} variant="outline">Stop</Button>
-                          <span className="text-sm text-gray-600">{30 - recordTime}s remaining</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-xs text-green-700 font-medium">Material scanned successfully!</p>
-                  {audioUrl && <audio src={audioUrl} controls className="w-full" />}
-                  <Button 
-                    onClick={() => {
-                      setHasScannedAudio(false);
-                      setAudioBlob(null);
-                      setAudioUrl(null);
-                      sessionStorage.removeItem('scanAudioData');
-                    }}
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                  >
-                    Scan Again
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
              {user && <MaterialForm onSubmit={handleSubmit} isLoading={isSubmitting} userId={user.uid} />}
              </div>
-
              {/* Material Match Dialog */}
              {showMatchDialog && (
                <MaterialMatchDialog
