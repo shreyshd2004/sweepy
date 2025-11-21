@@ -235,9 +235,10 @@ export default function ScanPage() {
             </div>
           ) : (
             <>
-              <div className="w-70 h-70 rounded-full bg-green-600 flex items-center justify-center shadow-lg mb-8 cursor-pointer hover:bg-green-700 transition-colors"
+              <div className="w-70 h-70 rounded-full bg-green-600 flex items-center justify-center shadow-lg mt-12 mb-8 cursor-pointer hover:bg-green-700 transition-colors"
                    onClick={startScan}>
-                <button className="text-white text-5xl font-bold tracking-wide">Start Scan</button>
+                <span className="text-white text-5xl font-bold leading-none">Start</span>
+                <span className="text-white text-5xl font-bold leading-none">Scan</span>
               </div>
             </>
           )}
