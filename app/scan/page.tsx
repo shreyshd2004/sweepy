@@ -236,15 +236,10 @@ export default function ScanPage() {
             </div>
           ) : (
             <>
-              <div className="w-56 h-56 rounded-full bg-green-600 flex items-center justify-center shadow-lg mb-8 cursor-pointer hover:bg-green-700 transition-colors"
+              <div className="w-70 h-70 rounded-full bg-green-600 flex items-center justify-center shadow-lg mb-8 cursor-pointer hover:bg-green-700 transition-colors"
                    onClick={startScan}>
                 <button className="text-white text-2xl font-bold tracking-wide">Start Scan</button>
               </div>
-              {/*<Button variant="outline" onClick={startScan} className="mb-2" disabled={isScanning}>
-                {isScanning ? 'Scanning...' : 'Start Scan'}
-              </Button>*/}
-              <button className="text-sm text-green-600 underline" onClick={() => toast.info("Try turning up your volume and moving the phone around.")}>Where's my speaker?</button>
-              <p className="text-sm text-gray-600 mt-2">Push and listen to where your speaker is.</p>
             </>
           )}
         </div>
