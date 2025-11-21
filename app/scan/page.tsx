@@ -212,13 +212,6 @@ export default function ScanPage() {
 
   return (
     <div className="min-h-screen bg-white pb-20">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-lg font-semibold text-gray-900">Scanning Page</h1>
-          <div className="w-16"></div>
-        </div>
-      </div>
 
       {/* Main Content */}
       <div className="px-4 py-10">
@@ -244,7 +237,7 @@ export default function ScanPage() {
             <>
               <div className="w-70 h-70 rounded-full bg-green-600 flex items-center justify-center shadow-lg mb-8 cursor-pointer hover:bg-green-700 transition-colors"
                    onClick={startScan}>
-                <button className="text-white text-4x2 font-bold tracking-wide">Start Scan</button>
+                <button className="text-white text-5xl font-bold tracking-wide">Start Scan</button>
               </div>
             </>
           )}
