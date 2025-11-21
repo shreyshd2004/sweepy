@@ -21,9 +21,9 @@ export function BottomNavigation() {
         }`}
       >
         <FileText className="w-6 h-6" />
-        <span className="text-xs">My Materials</span>
+        <span className="text-xs">Catalog</span>
       </Button>
-      
+      {/*
       <Button
         variant="ghost"
         size="sm"
@@ -39,6 +39,7 @@ export function BottomNavigation() {
         <Database className="w-6 h-6" />
         <span className="text-xs">Database</span>
       </Button>
+      */}
 
       <Button
         variant="ghost"
@@ -64,6 +65,7 @@ export function BottomNavigation() {
         <span className="text-xs">Leaderboard</span>
       </Button>
 
+      {/*
       <Button
         variant="ghost"
         size="sm"
@@ -75,6 +77,8 @@ export function BottomNavigation() {
         <UserIcon className="w-6 h-6" />
         <span className="text-xs">User</span>
       </Button>
+      */}
     </div>
+    
   );
 }
