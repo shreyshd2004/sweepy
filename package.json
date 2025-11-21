@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "firebase:deploy": "firebase deploy",
-    "firebase:rules": "firebase deploy --only firestore:rules,storage:rules",
+    "firebase:rules": "firebase deploy --only firestore:rules,storage",
     "android:build": "npm run build && npx cap sync",
     "android:open": "npx cap open android",
     "android:run": "npx cap run android"

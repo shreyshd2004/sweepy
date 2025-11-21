@@ -27,7 +27,130 @@ service cloud.firestore {
         && data.similarMaterials.size() <= 20
         && data.createdAt is timestamp
         && data.updatedAt is timestamp
-        && (data.imagePath == null || data.imagePath is string);
+        && (data.imagePath == null || data.imagePath is string)
+        && (!('audioPath' in data) || data.audioPath == null || data.audioPath is string)
+        && (!('frequencyData' in data) || data.frequencyData is map);
+    }
+    
+    // Users collection rules
+    match /users/{userId} {
+      // Allow read if user is authenticated
+      allow read: if request.auth != null;
+      
+      // Allow create if user is authenticated and sets their own UID
+      allow create: if request.auth != null 
+        && request.resource.data.uid == request.auth.uid
+        && validateUserData(request.resource.data);
+      
+      // Allow update if user owns the profile
+      allow update: if request.auth != null 
+        && resource.data.uid == request.auth.uid
+        && validateUserUpdateData(request.resource.data);
+    }
+    
+    // Helper function to validate user data
+    function validateUserData(data) {
+      return data.keys().hasAll(['uid', 'username', 'email', 'fullName', 'createdAt', 'updatedAt'])
+        && data.uid is string
+        && data.username is string
+        && data.username.size() >= 3
+        && data.username.size() <= 30
+        && data.email is string
+        && data.fullName is string
+        && data.fullName.size() >= 1
+        && data.fullName.size() <= 100
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        && (data.phoneNumber == null || data.phoneNumber is string)
+        && (data.bio == null || (data.bio is string && data.bio.size() <= 500))
+        && (data.photoURL == null || data.photoURL is string);
+    }
+    
+    // Helper function to validate user update data
+    function validateUserUpdateData(data) {
+      return (!('uid' in data) || data.uid == resource.data.uid)
+        && (!('username' in data) || (data.username is string && data.username.size() >= 3 && data.username.size() <= 30))
+        && (!('fullName' in data) || (data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 100))
+        && (!('phoneNumber' in data) || data.phoneNumber == null || data.phoneNumber is string)
+        && (!('bio' in data) || data.bio == null || (data.bio is string && data.bio.size() <= 500))
+        && (!('photoURL' in data) || data.photoURL == null || data.photoURL is string)
+        && data.updatedAt is timestamp;
+    }
+    
+    // Material Catalog collection rules
+    match /materialCatalog/{materialId} {
+      // Allow read for all authenticated users
+      allow read: if request.auth != null;
+      
+      // Allow create for authenticated users (when creating new catalog entry)
+      allow create: if request.auth != null
+        && validateCatalogData(request.resource.data);
+      
+      // Allow update for system/admin (rarity updates)
+      allow update: if request.auth != null
+        && validateCatalogUpdateData(request.resource.data);
+    }
+    
+    // Helper function to validate catalog data
+    function validateCatalogData(data) {
+      return data.keys().hasAll(['materialName', 'category', 'recyclingInstructions', 'rarity', 'tags', 'createdAt', 'updatedAt'])
+        && data.materialName is string
+        && data.materialName.size() >= 1
+        && data.materialName.size() <= 100
+        && data.category is string
+        && data.category.size() >= 1
+        && data.category.size() <= 50
+        && data.recyclingInstructions is string
+        && data.recyclingInstructions.size() <= 2000
+        && data.rarity in ['common', 'uncommon', 'rare', 'epic', 'legendary']
+        && data.tags is list
+        && data.tags.size() <= 10
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        && (data.description == null || (data.description is string && data.description.size() <= 500))
+        && (data.defaultImagePath == null || data.defaultImagePath is string);
+    }
+    
+    // Helper function to validate catalog update data
+    function validateCatalogUpdateData(data) {
+      return (!('materialName' in data) || (data.materialName is string && data.materialName.size() >= 1 && data.materialName.size() <= 100))
+        && (!('category' in data) || (data.category is string && data.category.size() >= 1 && data.category.size() <= 50))
+        && (!('rarity' in data) || data.rarity in ['common', 'uncommon', 'rare', 'epic', 'legendary'])
+        && data.updatedAt is timestamp;
+    }
+    
+    // User Discoveries collection rules
+    match /userDiscoveries/{discoveryId} {
+      // Allow read for authenticated users (their own discoveries)
+      allow read: if request.auth != null;
+      
+      // Allow create for authenticated users (their own discoveries)
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid
+        && validateDiscoveryData(request.resource.data);
+    }
+    
+    // Helper function to validate discovery data
+    function validateDiscoveryData(data) {
+      return data.keys().hasAll(['userId', 'materialId', 'discoveredAt', 'discoveryMethod', 'isFirstDiscovery', 'createdAt'])
+        && data.userId is string
+        && data.userId == request.auth.uid
+        && data.materialId is string
+        && data.discoveredAt is timestamp
+        && data.discoveryMethod in ['scan', 'manual', 'community']
+        && data.isFirstDiscovery is bool
+        && data.createdAt is timestamp
+        && (data.userMaterialId == null || data.userMaterialId is string);
+    }
+    
+    // Material Stats collection rules
+    match /materialStats/{materialId} {
+      // Allow read for all authenticated users
+      allow read: if request.auth != null;
+      
+      // Allow create/update for system (via Cloud Functions or server)
+      // For now, allow authenticated users to update (will be restricted later)
+      allow write: if request.auth != null;
     }
   }
 }

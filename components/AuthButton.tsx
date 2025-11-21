@@ -18,6 +18,7 @@ export function AuthButton({ user, onAuthChange }: AuthButtonProps) {
     setIsLoading(true);
     try {
       await signInWithGoogle();
+      // On iOS (redirect flow), success toast will show after redirect completes
       toast.success('Signed in successfully!');
     } catch (error) {
       toast.error('Failed to sign in. Please try again.');

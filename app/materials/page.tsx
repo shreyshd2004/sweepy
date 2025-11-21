@@ -24,6 +24,7 @@ export default function MaterialsPage() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -93,7 +94,7 @@ export default function MaterialsPage() {
   };
 
   const handleCreateNew = () => {
-    setIsCreateDialogOpen(true);
+    router.push('/materials/new');
   };
 
   const handleCreateSubmit = async (data: MaterialInput) => {
@@ -156,13 +157,15 @@ export default function MaterialsPage() {
         </div>
       </div>
 
-      {/* Search Bar */}
+      {/* Search Bar (big) */}
       <div className="px-4 py-4">
         <div className="relative">
           <input
             type="text"
             placeholder="Search your materials"
             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
           <svg className="absolute right-3 top-3 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -174,6 +177,7 @@ export default function MaterialsPage() {
       <div className="px-4 pb-6">
         <MaterialTable
           materials={materials}
+          searchQuery={searchQuery}
           onView={handleView}
           onEdit={handleEdit}
           onDelete={handleDelete}
@@ -204,6 +208,7 @@ export default function MaterialsPage() {
           <MaterialForm
             onSubmit={handleCreateSubmit}
             isLoading={isSubmitting}
+            userId={user!.uid}
           />
         </DialogContent>
       </Dialog>

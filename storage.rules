@@ -7,5 +7,32 @@ service firebase.storage {
       allow read, write, delete: if request.auth != null 
         && request.auth.uid == userId;
     }
+
+    // Materials audio clips
+    match /materials-audio/{userId}/{allPaths=**} {
+      allow read, write, delete: if request.auth != null
+        && request.auth.uid == userId;
+    }
+
+    // User profile images
+    match /user-profiles/{userId}/{allPaths=**} {
+      // Allow read for all authenticated users (for displaying in leaderboard, etc.)
+      allow read: if request.auth != null;
+      // Allow write/delete only if user owns the file
+      allow write, delete: if request.auth != null
+        && request.auth.uid == userId;
+    }
+
+    // Material catalog images (read for all, write for system)
+    match /material-catalog-images/{materialId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if false; // System-only writes
+    }
+
+    // Community audio recordings (read for all, write for system)
+    match /material-audio-community/{materialId}/{recordingId} {
+      allow read: if request.auth != null;
+      allow write: if false; // System-only writes
+    }
   }
 }

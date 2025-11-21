@@ -1,0 +1,12 @@
+{
+	"appId": "com.sweepy.app",
+	"appName": "Sweepy",
+	"webDir": "out",
+	"server": {
+		"androidScheme": "https"
+	},
+	"packageClassList": [
+		"CAPCameraPlugin",
+		"FilesystemPlugin"
+	]
+}

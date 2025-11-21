@@ -162,6 +162,7 @@ export function MaterialDetailDrawer({
               initialData={material}
               onSubmit={handleUpdate}
               isLoading={isLoading}
+              userId={userId}
             />
           ) : (
             <div className="space-y-6">

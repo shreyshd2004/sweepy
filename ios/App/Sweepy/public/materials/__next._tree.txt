@@ -1,0 +1,10 @@
+1:"$Sreact.fragment"
+2:I[63430,["/_next/static/chunks/661956bb89fa1bd3.js"],"ViewportBoundary"]
+4:I[63430,["/_next/static/chunks/661956bb89fa1bd3.js"],"MetadataBoundary"]
+5:"$Sreact.suspense"
+7:I[76709,["/_next/static/chunks/661956bb89fa1bd3.js"],"IconMark"]
+:HL["/_next/static/chunks/3ef71db58429cb84.css","style"]
+:HL["/_next/static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+0:{"buildId":"yV_qmKTb-dnHCFCFR9Kbt","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"materials","paramType":null,"paramKey":"materials","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":true},"head":["$","$1","h",{"children":[null,["$","$L2",null,{"children":"$@3"}],["$","div",null,{"hidden":true,"children":["$","$L4",null,{"children":["$","$5",null,{"name":"Next.Metadata","children":"$@6"}]}]}],["$","meta",null,{"name":"next-size-adjust","content":""}]]}],"isHeadPartial":false,"staleTime":300}
+3:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]
+6:[["$","title","0",{"children":"Sweepy - Material Recycling Tracker"}],["$","meta","1",{"name":"description","content":"Track and manage recyclable materials with ease"}],["$","link","2",{"rel":"icon","href":"/favicon.ico?favicon.0b3bf435.ico","sizes":"256x256","type":"image/x-icon"}],["$","$L7","3",{}]]

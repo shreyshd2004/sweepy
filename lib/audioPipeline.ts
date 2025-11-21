@@ -151,17 +151,41 @@ export class AudioPipeline {
     }
 
     console.log('Playing sweep and recording...');
+    console.log('AudioContext state:', this.audioContext.state);
+
+    // Resume audio context if suspended (required by browser autoplay policies)
+    if (this.audioContext.state === 'suspended') {
+      await this.audioContext.resume();
+      console.log('AudioContext resumed, new state:', this.audioContext.state);
+    }
 
     // Create a promise that resolves when recording is complete
     const recordingPromise = this.recordAudio(this.SWEEP_DURATION);
 
-    // Play sweep audio
+    // Play sweep audio with gain control for volume
     const source = this.audioContext.createBufferSource();
+    const gainNode = this.audioContext.createGain();
+    
+    // Set volume to 0.8 (80%) - adjust if needed
+    gainNode.gain.value = 0.8;
+    
     source.buffer = this.sweepBuffer;
-    source.connect(this.audioContext.destination);
+    source.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+    
+    // Handle playback end
+    source.onended = () => {
+      console.log('Sweep audio playback completed');
+    };
     
     // Start playback immediately
-    source.start(0);
+    try {
+      source.start(0);
+      console.log('Sweep audio started playing');
+    } catch (error) {
+      console.error('Error starting sweep playback:', error);
+      throw error;
+    }
 
     // Wait for recording to complete
     return recordingPromise;

@@ -16,11 +16,13 @@ interface MaterialFormProps {
   initialData?: Partial<MaterialInput>;
   onSubmit: (data: MaterialInput) => Promise<void>;
   isLoading?: boolean;
+  userId: string;
 }
 
-export function MaterialForm({ initialData, onSubmit, isLoading = false }: MaterialFormProps) {
+export function MaterialForm({ initialData, onSubmit, isLoading = false, userId }: MaterialFormProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [similarMaterials, setSimilarMaterials] = useState<string[]>(
     initialData?.similarMaterials || []
   );
@@ -44,19 +46,104 @@ export function MaterialForm({ initialData, onSubmit, isLoading = false }: Mater
     },
   });
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.type.startsWith('image/')) {
-        setImageFile(file);
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setImagePreview(e.target?.result as string);
+  // Compress and resize image for preview
+  const compressImage = (file: File, maxWidth: number = 800, maxHeight: number = 600, quality: number = 0.8): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Calculate new dimensions
+          if (width > height) {
+            if (width > maxWidth) {
+              height = (height * maxWidth) / width;
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = (width * maxHeight) / height;
+              height = maxHeight;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Could not get canvas context'));
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressedFile = new File([blob], file.name, {
+                  type: file.type,
+                  lastModified: Date.now(),
+                });
+                resolve(compressedFile);
+              } else {
+                reject(new Error('Compression failed'));
+              }
+            },
+            file.type,
+            quality
+          );
         };
-        reader.readAsDataURL(file);
-      } else {
-        toast.error('Please select a valid image file');
-      }
+        img.onerror = reject;
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select a valid image file');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      toast.error('Image is too large. Please select an image smaller than 10MB.');
+      return;
+    }
+
+    setIsProcessingImage(true);
+    
+    try {
+      // Compress image for better performance
+      const compressedFile = await compressImage(file);
+      setImageFile(compressedFile);
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+        setIsProcessingImage(false);
+      };
+      reader.onerror = () => {
+        toast.error('Failed to load image preview');
+        setIsProcessingImage(false);
+      };
+      reader.readAsDataURL(compressedFile);
+    } catch (error) {
+      console.error('Error processing image:', error);
+      toast.error('Failed to process image. Please try again.');
+      setIsProcessingImage(false);
     }
   };
 
@@ -85,17 +172,35 @@ export function MaterialForm({ initialData, onSubmit, isLoading = false }: Mater
 
   const onFormSubmit = async (data: MaterialInput) => {
     try {
-      let imagePath = initialData?.imagePath;
+      // Validate image is provided (required)
+      if (!imageFile && !initialData?.imagePath) {
+        toast.error('An image is required. Please upload a photo.');
+        return;
+      }
+
+      let imagePath = initialData?.imagePath || null;
 
       // Upload image if new one is selected
       if (imageFile) {
-        imagePath = await uploadMaterialImage(data.materialName, imageFile);
+        try {
+          imagePath = await uploadMaterialImage(userId, imageFile);
+        } catch (uploadError) {
+          console.error('Image upload error:', uploadError);
+          toast.error('Failed to upload image. Please try again.');
+          return;
+        }
       }
 
+      // Ensure imagePath is a string or null (not undefined) - required field
+      if (!imagePath) {
+        toast.error('An image is required. Please upload a photo.');
+        return;
+      }
+      
       const submitData: MaterialInput = {
         ...data,
         similarMaterials,
-        imagePath,
+        imagePath: imagePath, // Must be a string, never undefined or null
       };
 
       await onSubmit(submitData);
@@ -108,9 +213,10 @@ export function MaterialForm({ initialData, onSubmit, isLoading = false }: Mater
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting form:', error);
-      toast.error('Failed to save material. Please try again.');
+      const errorMessage = error?.message || 'Failed to save material. Please try again.';
+      toast.error(errorMessage);
     }
   };
 
@@ -118,14 +224,22 @@ export function MaterialForm({ initialData, onSubmit, isLoading = false }: Mater
     <form onSubmit={handleSubmit(onFormSubmit as any)} className="space-y-6">
       {/* Image Upload */}
       <div className="space-y-4">
-        <label className="text-sm font-medium">Material Image (Optional)</label>
+        <label className="text-sm font-medium">Material Image *</label>
         
-        {imagePreview ? (
+        {isProcessingImage ? (
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            <div className="space-y-2">
+              <div className="w-8 h-8 mx-auto border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-sm text-gray-600">Processing image...</p>
+            </div>
+          </div>
+        ) : imagePreview ? (
           <div className="relative">
             <img 
               src={imagePreview} 
               alt="Preview" 
               className="w-full h-48 object-cover rounded-lg border"
+              loading="lazy"
             />
             <Button
               type="button"
@@ -151,10 +265,12 @@ export function MaterialForm({ initialData, onSubmit, isLoading = false }: Mater
               <p className="text-sm text-gray-600">
                 Click to upload an image or drag and drop
               </p>
+              <p className="text-xs text-gray-500">Max size: 10MB</p>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}
+                disabled={isProcessingImage}
               >
                 <Camera className="w-4 h-4 mr-2" />
                 Choose Image

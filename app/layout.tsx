@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { Toaster } from '@/components/ui/sonner';
+import ClientRoot from '@/components/ClientRoot';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -17,9 +17,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <meta httpEquiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: blob:; font-src * data:; connect-src * wss: ws:; media-src * blob:;" />
+      </head>
       <body className={inter.className}>
-        {children}
-        <Toaster />
+        <ClientRoot>{children}</ClientRoot>
       </body>
     </html>
   );

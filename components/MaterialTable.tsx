@@ -4,11 +4,14 @@ import React, { useState, useMemo } from 'react';
 import { MaterialDocument } from '@/lib/zodSchemas';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { getImageDownloadURL } from '@/lib/storage';
+import { Trash2 } from 'lucide-react';
 import { MaterialCard } from './MaterialCard';
 import { Search, Plus } from 'lucide-react';
 
 interface MaterialTableProps {
   materials: MaterialDocument[];
+  searchQuery?: string;
   onView: (material: MaterialDocument) => void;
   onEdit: (material: MaterialDocument) => void;
   onDelete: (material: MaterialDocument) => void;
@@ -18,13 +21,31 @@ interface MaterialTableProps {
 
 export function MaterialTable({
   materials,
+  searchQuery = '',
   onView,
   onEdit,
   onDelete,
   onCreateNew,
   isLoading = false,
 }: MaterialTableProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+
+  React.useEffect(() => {
+    const load = async () => {
+      const entries = await Promise.all(
+        materials.map(async (m) => {
+          if (m.imagePath) {
+            try { return [m.id, await getImageDownloadURL(m.imagePath)] as const; } catch { return [m.id, ''] as const; }
+          }
+          return [m.id, ''] as const;
+        })
+      );
+      const map: Record<string, string> = {};
+      for (const [id, url] of entries) map[id] = url;
+      setImageUrls(map);
+    };
+    load();
+  }, [materials]);
 
   const filteredMaterials = useMemo(() => {
     if (!searchQuery.trim()) return materials;
@@ -61,19 +82,8 @@ export function MaterialTable({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex-1 max-w-md">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Search materials..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
+      {/* Header (keep only big search in page header; here just Add) */}
+      <div className="flex justify-end">
         <Button onClick={onCreateNew} className="w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           Add Material
@@ -113,11 +123,20 @@ export function MaterialTable({
         <div className="grid grid-cols-2 gap-4">
           {filteredMaterials.map((material) => (
             <div key={material.id} className="bg-white rounded-xl border border-gray-200 p-4 text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span className="text-green-600 text-2xl">♻️</span>
-              </div>
+              {imageUrls[material.id] ? (
+                <img src={imageUrls[material.id]} alt={material.materialName} className="w-full h-24 object-cover rounded-lg mb-3" />
+              ) : (
+                <div className="w-full h-24 bg-gray-100 rounded-lg mb-3" />
+              )}
               <h3 className="font-semibold text-sm text-gray-900 mb-1">{material.materialName}</h3>
               <p className="text-xs text-gray-500">{material.similarMaterials.length} similar</p>
+              <div className="mt-3 flex justify-center gap-2">
+                <Button size="sm" variant="outline" onClick={() => onView(material)}>View</Button>
+                <Button size="sm" variant="outline" className="text-red-600" onClick={() => onDelete(material)}>
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Delete
+                </Button>
+              </div>
             </div>
           ))}
         </div>
