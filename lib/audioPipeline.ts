@@ -18,18 +18,17 @@ export interface AudioRecording {
   timestamp: number;
 }
 
-export interface ProcessedAudio {
-  ambientRecording: AudioRecording;
-  sampleRecording: AudioRecording;
-  subtractedData: Float32Array;
-  frequencyData: FrequencyData;
-}
-
 export interface FrequencyData {
   frequencies: Float32Array;
   magnitudes: Float32Array;
   fftSize: number;
   frequencyRange: { min: number; max: number };
+}
+
+export interface ProcessedAudio {
+  ambientRecording: AudioRecording;
+  sampleRecording: AudioRecording;
+  frequencyData: FrequencyData;
 }
 
 export class AudioPipeline {
@@ -398,11 +397,11 @@ computeSTFT(audioData: Float32Array): FrequencyData {
     // Step 2: Play sweep and record
     const sampleRecording = await this.playSweepAndRecord();
 
-    // Step 3: Spectral subtraction
+    // Step 3: Compute FFT
     const sampleFFT = this.computeSTFT(sampleRecording.rawData);
     const ambientFFT = this.computeSTFT(ambientRecording.rawData);
 
-    // Step 4: Compute FFT
+    // Step 4: Spectral Subtraction
     const subtractedMagnitudes = new Float32Array(sampleFFT.magnitudes.length);
     for (let i = 0; i < sampleFFT.magnitudes.length; i++) {
       subtractedMagnitudes[i] = Math.max(0, sampleFFT.magnitudes[i] - ambientFFT.magnitudes[i]);
@@ -417,13 +416,9 @@ computeSTFT(audioData: Float32Array): FrequencyData {
       frequencyRange: sampleFFT.frequencyRange
     };
 
-    // Logic to save to DATABASES WILL GO HERE
-
-
     return {
     ambientRecording: ambientRecording,
     sampleRecording: sampleRecording,
-    subtractedData: new Float32Array(0), // Not used in this approach
     frequencyData: processedFrequencyData,
   };
 }
