@@ -225,7 +225,7 @@ export default function ScanPage() {
         <div className="max-w-md mx-auto flex flex-col items-center">
           {/* Help Button */}
           <div className="w-full flex justify-end mb-6">
-            <Button variant="outline" size="sm" className="bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200" onClick={() => toast.info("Try turning up your volume and moving the phone around.")}>
+            <Button variant="outline" size="default" className="bg-[#D1E5CE] text-gray-700 border-gray-300 hover:bg-gray-200 rounded-full px-6 py-2" onClick={() => toast.info("Try turning up your volume and moving the phone around.")}>
               Help
             </Button>
           </div>
@@ -244,7 +244,7 @@ export default function ScanPage() {
             <>
               <div className="w-70 h-70 rounded-full bg-green-600 flex items-center justify-center shadow-lg mb-8 cursor-pointer hover:bg-green-700 transition-colors"
                    onClick={startScan}>
-                <button className="text-white text-2xl font-bold tracking-wide">Start Scan</button>
+                <button className="text-white text-4x2 font-bold tracking-wide">Start Scan</button>
               </div>
             </>
           )}
