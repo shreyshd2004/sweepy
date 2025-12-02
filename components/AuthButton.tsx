@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { signInWithGoogle, signOutUser } from '@/lib/auth';
+import { signInWithGoogle, signOutUser, consumeRedirectResult, onAuthStateChange } from '@/lib/auth';
 import { User } from 'firebase/auth';
 import { toast } from 'sonner';
 
@@ -14,14 +14,39 @@ interface AuthButtonProps {
 export function AuthButton({ user, onAuthChange }: AuthButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
+  // Handle redirect result on mount (for redirect flow)
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      try {
+        const result = await consumeRedirectResult();
+        if (result) {
+          onAuthChange(result);
+          toast.success('Signed in successfully!');
+        }
+      } catch (error) {
+        console.error('Error handling redirect result:', error);
+      }
+    };
+    handleRedirectResult();
+  }, [onAuthChange]);
+
   const handleSignIn = async () => {
     setIsLoading(true);
     try {
-      await signInWithGoogle();
-      // On iOS (redirect flow), success toast will show after redirect completes
-      toast.success('Signed in successfully!');
-    } catch (error) {
-      toast.error('Failed to sign in. Please try again.');
+      const result = await signInWithGoogle();
+      
+      // If popup flow, result will be the user
+      if (result) {
+        onAuthChange(result);
+        toast.success('Signed in successfully!');
+      } else {
+        // Redirect flow - user will be handled by redirect result
+        // Don't show success yet, wait for redirect to complete
+        toast.info('Redirecting to sign in...');
+      }
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Failed to sign in. Please try again.';
+      toast.error(errorMessage);
       console.error('Sign in error:', error);
     } finally {
       setIsLoading(false);

@@ -3,8 +3,10 @@ service firebase.storage {
   match /b/{bucket}/o {
     // Materials images
     match /materials/{userId}/{allPaths=**} {
-      // Allow read, write, delete only if user is authenticated and owns the file
-      allow read, write, delete: if request.auth != null 
+      // Allow read for all authenticated users (for catalog display)
+      allow read: if request.auth != null;
+      // Allow write, delete only if user owns the file
+      allow write, delete: if request.auth != null 
         && request.auth.uid == userId;
     }
 

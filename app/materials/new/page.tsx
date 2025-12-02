@@ -19,6 +19,28 @@ import { matchMaterialToCatalog, linkMaterialToCatalog, createCatalogEntry } fro
 import { MaterialMatchDialog } from '@/components/MaterialMatchDialog';
 import { MaterialMatchResult } from '@/lib/zodSchemas';
 
+// Helper function to get material name from counter (cycles: paper, plastic, cardboard)
+const getMaterialNameFromCounter = (counter: number): string => {
+  const materials = ['Paper', 'Plastic', 'Cardboard'];
+  const index = (counter - 1) % materials.length;
+  return materials[index];
+};
+
+// Helper function to get and increment scan counter
+const getScanCounter = (): number => {
+  if (typeof window === 'undefined') return 1;
+  const stored = localStorage.getItem('scanCounter');
+  return stored ? parseInt(stored, 10) : 1;
+};
+
+const incrementScanCounter = (): number => {
+  if (typeof window === 'undefined') return 1;
+  const current = getScanCounter();
+  const next = current + 1;
+  localStorage.setItem('scanCounter', next.toString());
+  return next;
+};
+
 export default function NewMaterialPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,10 +57,17 @@ export default function NewMaterialPage() {
   const [showMatchDialog, setShowMatchDialog] = useState(false);
   const [materialMatches, setMaterialMatches] = useState<MaterialMatchResult[]>([]);
   const [pendingMaterialData, setPendingMaterialData] = useState<{ materialId: string; payload: any } | null>(null);
+  const [autoFillMaterialName, setAutoFillMaterialName] = useState<string>('');
   const router = useRouter();
 
   useEffect(() => {
     console.log('🟢 NewMaterialPage: useEffect running');
+    
+    // Set auto-fill material name based on counter
+    const counter = getScanCounter();
+    const materialName = getMaterialNameFromCounter(counter);
+    setAutoFillMaterialName(materialName);
+    console.log('🟢 NewMaterialPage: Auto-filling material name:', materialName, 'from counter:', counter);
     
     // CRITICAL: Check pathname FIRST - if we're on this page, NEVER redirect away
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
@@ -235,8 +264,8 @@ export default function NewMaterialPage() {
       if (audioBlob) {
         console.log('Uploading audio blob...', { size: audioBlob.size, type: audioBlob.type });
         try {
-          const audioPath = await uploadMaterialAudio(user.uid, audioBlob);
-          payload.audioPath = audioPath;
+        const audioPath = await uploadMaterialAudio(user.uid, audioBlob);
+        payload.audioPath = audioPath;
           console.log('Audio uploaded successfully:', audioPath);
         } catch (audioError) {
           console.error('Audio upload error:', audioError);
@@ -277,6 +306,10 @@ export default function NewMaterialPage() {
         // Continue anyway - create new catalog entry
         await handleCreateNewCatalogEntry(materialId, payload, user.uid);
       }
+      
+      // Increment scan counter after successful save
+      incrementScanCounter();
+      console.log('Material saved! Counter incremented. Next material will be:', getMaterialNameFromCounter(getScanCounter()));
       
       toast.success('Material saved to database!');
       sessionStorage.removeItem('scanAudioData'); // Clean up
@@ -383,6 +416,10 @@ export default function NewMaterialPage() {
         !!pendingMaterialData.payload.audioPath
       );
       
+      // Increment scan counter after successful link
+      incrementScanCounter();
+      console.log('Material linked! Counter incremented. Next material will be:', getMaterialNameFromCounter(getScanCounter()));
+      
       toast.success('Material linked to existing catalog entry!');
       sessionStorage.removeItem('scanAudioData');
       router.push('/materials');
@@ -390,6 +427,8 @@ export default function NewMaterialPage() {
       console.error('Error linking material:', error);
       toast.error('Failed to link material. Creating new entry instead.');
       await handleCreateNewCatalogEntry(pendingMaterialData.materialId, pendingMaterialData.payload, user.uid);
+      // Increment counter even if link failed but catalog entry was created
+      incrementScanCounter();
       router.push('/materials');
     } finally {
       setIsSubmitting(false);
@@ -406,6 +445,11 @@ export default function NewMaterialPage() {
     
     try {
       await handleCreateNewCatalogEntry(pendingMaterialData.materialId, pendingMaterialData.payload, user.uid);
+      
+      // Increment scan counter after successful save
+      incrementScanCounter();
+      console.log('Material saved from dialog! Counter incremented. Next material will be:', getMaterialNameFromCounter(getScanCounter()));
+      
       toast.success('Material saved to database!');
       sessionStorage.removeItem('scanAudioData');
       router.push('/materials');
@@ -568,7 +612,7 @@ export default function NewMaterialPage() {
         <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-4 text-center text-gray-700">
           You Discovered A New Material! Describe it and add a photo.
         </div>
-             {user && <MaterialForm onSubmit={handleSubmit} isLoading={isSubmitting} userId={user.uid} />}
+             {user && <MaterialForm onSubmit={handleSubmit} isLoading={isSubmitting} userId={user.uid} initialData={{ materialName: autoFillMaterialName }} />}
              </div>
              {/* Material Match Dialog */}
              {showMatchDialog && (
@@ -586,9 +630,9 @@ export default function NewMaterialPage() {
                />
              )}
 
-             <BottomNavigation />
-           </div>
-         );
-       }
+      <BottomNavigation />
+    </div>
+  );
+}
 
 

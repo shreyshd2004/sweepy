@@ -56,16 +56,33 @@ export default function DatabasePage() {
     // Load image URLs for catalog items
     const loadImageUrls = async () => {
       const urls = new Map<string, string>();
+      console.log('Loading image URLs for', catalog.length, 'catalog items');
+      
       for (const item of catalog) {
         if (item.defaultImagePath) {
           try {
-            const url = await getImageDownloadURL(item.defaultImagePath);
-            urls.set(item.id, url);
-          } catch (error) {
-            console.error(`Error loading image for ${item.id}:`, error);
+            // Check if it's already a URL (starts with http/https)
+            if (item.defaultImagePath.startsWith('http://') || item.defaultImagePath.startsWith('https://')) {
+              console.log(`Using direct URL for ${item.materialName}:`, item.defaultImagePath);
+              urls.set(item.id, item.defaultImagePath);
+            } else {
+              // It's a storage path, get the download URL
+              console.log(`Fetching download URL for ${item.materialName} from path:`, item.defaultImagePath);
+              const url = await getImageDownloadURL(item.defaultImagePath);
+              console.log(`Got download URL for ${item.materialName}:`, url);
+              urls.set(item.id, url);
+            }
+          } catch (error: any) {
+            console.error(`Error loading image for ${item.materialName} (${item.id}) with path ${item.defaultImagePath}:`, error);
+            console.error('Error details:', error?.code, error?.message);
+            // Don't set URL if it fails - will show placeholder
           }
+        } else {
+          console.log(`No image path for ${item.materialName} (${item.id})`);
         }
       }
+      
+      console.log('Loaded', urls.size, 'image URLs out of', catalog.length, 'items');
       setImageUrls(urls);
     };
 
@@ -131,12 +148,12 @@ export default function DatabasePage() {
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
-      case 'common': return 'bg-gray-100 text-gray-700';
-      case 'uncommon': return 'bg-green-100 text-green-700';
-      case 'rare': return 'bg-blue-100 text-blue-700';
-      case 'epic': return 'bg-purple-100 text-purple-700';
-      case 'legendary': return 'bg-yellow-100 text-yellow-700';
-      default: return 'bg-gray-100 text-gray-700';
+      case 'common': return 'bg-gray-200 text-gray-800';
+      case 'uncommon': return 'bg-green-300 text-green-800';
+      case 'rare': return 'bg-blue-300 text-blue-800';
+      case 'epic': return 'bg-purple-300 text-purple-800';
+      case 'legendary': return 'bg-yellow-300 text-yellow-800';
+      default: return 'bg-gray-200 text-gray-800';
     }
   };
 
@@ -168,20 +185,6 @@ export default function DatabasePage() {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-4 sticky top-0 z-10">
         <h1 className="text-lg font-semibold text-gray-900">Material Database</h1>
-        <div className="flex items-center gap-2 mt-2">
-          <div className="flex items-center gap-1 text-sm text-gray-600">
-            <CheckCircle2 className="w-4 h-4 text-green-600" />
-            <span className="font-semibold text-green-600">{discoveredCount}</span>
-            <span className="text-gray-400">/</span>
-            <span>{totalCount}</span>
-            <span className="text-gray-500 ml-1">discovered</span>
-          </div>
-          {totalCount > 0 && (
-            <div className="text-xs text-gray-500 ml-2">
-              {Math.round((discoveredCount / totalCount) * 100)}% complete
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Filters */}
@@ -254,41 +257,41 @@ export default function DatabasePage() {
                 onClick={() => handleMaterialClick(item)}
                 className={`relative bg-white border-2 rounded-xl p-3 transition-all ${
                   item.isDiscovered
-                    ? 'border-green-200 hover:border-green-300'
-                    : 'border-gray-200 hover:border-gray-300 opacity-60'
+                    ? 'border-green-400 hover:border-green-500 shadow-md'
+                    : 'border-gray-300 hover:border-gray-400 opacity-75'
                 }`}
               >
                 {/* Discovery Status */}
                 <div className="absolute top-2 right-2">
                   {item.isDiscovered ? (
-                    <CheckCircle2 className="w-5 h-5 text-green-600" />
+                    <CheckCircle2 className="w-5 h-5 text-green-500" />
                   ) : (
-                    <Circle className="w-5 h-5 text-gray-400" />
+                    <Circle className="w-5 h-5 text-gray-500" />
                   )}
                 </div>
 
                 {/* Material Image */}
-                <div className={`w-full aspect-square bg-gray-100 rounded-lg mb-2 flex items-center justify-center overflow-hidden ${!item.isDiscovered ? 'grayscale opacity-50' : ''}`}>
+                <div className={`w-full aspect-square bg-gray-100 rounded-lg mb-2 flex items-center justify-center overflow-hidden relative ${!item.isDiscovered ? 'opacity-80' : ''}`}>
                   {imageUrls.get(item.id) ? (
-                    <img
-                      src={imageUrls.get(item.id)}
-                      alt={item.materialName}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  ) : item.defaultImagePath ? (
-                    <img
-                      src={item.defaultImagePath}
-                      alt={item.materialName}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
+                    <>
+                      <img
+                        src={imageUrls.get(item.id)!}
+                        alt={item.materialName}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error(`Failed to load image for ${item.materialName}:`, imageUrls.get(item.id));
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          // Show placeholder if image fails
+                          const placeholder = (e.target as HTMLImageElement).parentElement?.querySelector('.image-placeholder') as HTMLElement;
+                          if (placeholder) placeholder.style.display = 'flex';
+                        }}
+                      />
+                      <div className="image-placeholder text-gray-400 text-4xl flex items-center justify-center w-full h-full absolute inset-0" style={{ display: 'none' }}>
+                        ?
+                      </div>
+                    </>
                   ) : (
-                    <div className="text-gray-400 text-4xl">?</div>
+                    <div className="text-gray-400 text-4xl flex items-center justify-center w-full h-full">?</div>
                   )}
                 </div>
 

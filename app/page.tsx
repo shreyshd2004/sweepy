@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { User } from 'firebase/auth';
-import { onAuthStateChange } from '@/lib/auth';
+import { onAuthStateChange, consumeRedirectResult } from '@/lib/auth';
 import { AuthButton } from '@/components/AuthButton';
 import { Button } from '@/components/ui/button';
 import { Recycle, Camera, Database } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function RootPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -14,6 +15,25 @@ export default function RootPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Handle redirect result first (if user just came back from Google sign-in)
+    const handleRedirect = async () => {
+      try {
+        const result = await consumeRedirectResult();
+        if (result) {
+          console.log('🟡 LandingPage: Got redirect result, user signed in:', result.uid);
+          setUser(result);
+          setLoading(false);
+          toast.success('Signed in successfully!');
+          // Redirect to scan page after successful sign-in
+          router.push('/scan');
+          return;
+        }
+      } catch (error) {
+        console.error('🟡 LandingPage: Error handling redirect result:', error);
+      }
+    };
+    handleRedirect();
+
     console.log('🟡 LandingPage: useEffect running, setting up auth listener');
     const unsubscribe = onAuthStateChange((user) => {
       console.log('🟡 LandingPage: Auth state changed', { 

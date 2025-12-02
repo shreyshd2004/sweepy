@@ -23,15 +23,11 @@ export function BottomNavigation() {
         <FileText className="w-6 h-6" />
         <span className="text-xs">Catalog</span>
       </Button>
-      {/*
+
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => {
-          if (typeof window !== 'undefined') {
-            window.location.href = '/database';
-          }
-        }}
+        onClick={() => router.push('/database')}
         className={`flex flex-col items-center gap-1 p-2 ${
           isActive('/database') ? 'text-white' : 'text-green-100'
         }`}
@@ -39,7 +35,6 @@ export function BottomNavigation() {
         <Database className="w-6 h-6" />
         <span className="text-xs">Database</span>
       </Button>
-      */}
 
       <Button
         variant="ghost"
@@ -65,7 +60,6 @@ export function BottomNavigation() {
         <span className="text-xs">Leaderboard</span>
       </Button>
 
-      {/*
       <Button
         variant="ghost"
         size="sm"
@@ -77,7 +71,6 @@ export function BottomNavigation() {
         <UserIcon className="w-6 h-6" />
         <span className="text-xs">User</span>
       </Button>
-      */}
     </div>
     
   );

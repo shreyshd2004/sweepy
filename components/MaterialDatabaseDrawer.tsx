@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getImageDownloadURL, getAudioDownloadURL } from '@/lib/storage';
-import { X, Users, Trophy, Calendar, Play, Pause } from 'lucide-react';
+import { Users, Trophy, Calendar, Play, Pause } from 'lucide-react';
 
 interface MaterialDatabaseDrawerProps {
   material: {
@@ -86,11 +86,8 @@ export function MaterialDatabaseDrawer({
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
         <SheetHeader>
-          <SheetTitle className="flex items-center justify-between">
-            <span>{material.materialName}</span>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="w-4 h-4" />
-            </Button>
+          <SheetTitle>
+            {material.materialName}
           </SheetTitle>
         </SheetHeader>
 
