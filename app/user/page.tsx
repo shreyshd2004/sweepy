@@ -88,7 +88,17 @@ export default function UserPage() {
           <Button 
             variant="outline" 
             className="w-full"
-            onClick={async () => { await signOutUser(); router.push('/'); }}
+            onClick={async () => {
+              try {
+                await signOutUser();
+                // Use window.location for a full page reload to clear all state
+                window.location.href = '/';
+              } catch (error) {
+                console.error('Sign out error:', error);
+                // Still try to navigate even if sign out fails
+                window.location.href = '/';
+              }
+            }}
           >
             Sign out
           </Button>

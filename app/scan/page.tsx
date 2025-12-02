@@ -137,13 +137,16 @@ export default function ScanPage() {
       // Export processed audio as WAV for storage
       const processedWavBlob = pipeline.exportToWav(processedAudio.sampleRecording);
       
+      // Convert audio to base64 so we can persist it for the form page.
+      const audioBase64 = await blobToBase64(processedWavBlob);
+      
       // Cleanup
       await cleanupAudioPipeline();
       
       // Store processed data in sessionStorage to pass to next page
       sessionStorage.setItem('scanAudioData', JSON.stringify({
         frequencyData,
-        audioBlob: await blobToBase64(processedWavBlob),
+        audioBlob: audioBase64,
         audioType: 'audio/wav',
       }));
       

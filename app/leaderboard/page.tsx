@@ -28,19 +28,100 @@ export default function LeaderboardPage() {
       
       try {
         // Load leaderboard and user stats
-        const [leaderboardData, stats] = await Promise.all([
-          getLeaderboard(user.uid, 20), // Top 20 users
-          getUserStats(user.uid)
+        const [rawLeaderboard, stats] = await Promise.all([
+          getLeaderboard(user.uid, 50), // Fetch a bit more so we can rank accurately
+          getUserStats(user.uid),
         ]);
+
+        console.log('🔵 Leaderboard: getUserStats result:', stats);
+        console.log('🔵 Leaderboard: rawLeaderboard entries:', rawLeaderboard.length);
+
+        // ALWAYS use getUserStats for the current user to match profile exactly
+        // This ensures leaderboard and profile show the same points
+        if (!stats) {
+          console.warn('⚠️ Leaderboard: getUserStats returned null/undefined, using fallback');
+        }
+        const userStatsForLeaderboard: UserStats = stats || {
+          totalDiscovered: 0,
+          discoveredThisWeek: 0,
+          points: 0,
+        };
         
-        setLeaderboard(leaderboardData);
-        setUserStats(stats);
-        
-        // Find user's rank
-        const rank = leaderboardData.findIndex(entry => entry.uid === user.uid) + 1;
-        setUserRank(rank || null);
+        console.log('🔵 Leaderboard: Using stats for current user:', userStatsForLeaderboard);
+
+        // Ensure the current user always appears on the leaderboard with stats from getUserStats
+        let entries: LeaderboardEntry[] = [...rawLeaderboard];
+
+        const existingIndex = entries.findIndex((entry) => entry.uid === user.uid);
+        console.log('🔵 Leaderboard: Current user found at index:', existingIndex);
+        if (existingIndex >= 0) {
+          console.log('🔵 Leaderboard: Before overwrite - entry points:', entries[existingIndex].points);
+          // ALWAYS overwrite with getUserStats to match profile
+          entries[existingIndex] = {
+            ...entries[existingIndex],
+            points: userStatsForLeaderboard.points,
+            totalDiscovered: userStatsForLeaderboard.totalDiscovered,
+            discoveredThisWeek: userStatsForLeaderboard.discoveredThisWeek,
+            displayName: user.displayName || entries[existingIndex].displayName || 'You',
+            photoURL: user.photoURL || entries[existingIndex].photoURL || null,
+          };
+          console.log('🔵 Leaderboard: After overwrite - entry points:', entries[existingIndex].points);
+        } else {
+          // Add current user if not in leaderboard
+          const userEntry: LeaderboardEntry = {
+            uid: user.uid,
+            displayName: user.displayName || 'You',
+            photoURL: user.photoURL || null,
+            points: userStatsForLeaderboard.points,
+            totalDiscovered: userStatsForLeaderboard.totalDiscovered,
+            discoveredThisWeek: userStatsForLeaderboard.discoveredThisWeek,
+            rank: 0, // temporary, will be reassigned below
+          };
+          entries.push(userEntry);
+        }
+
+        // Sort by points and assign global ranks
+        entries = entries
+          .sort((a, b) => b.points - a.points)
+          .map((entry, index) => ({
+            ...entry,
+            rank: index + 1,
+          }));
+
+        setLeaderboard(entries);
+
+        // Always use getUserStats for header to match profile exactly
+        setUserStats(userStatsForLeaderboard);
+
+        // Find user's rank from the final list
+        const rankIndex = entries.findIndex((entry) => entry.uid === user.uid);
+        setUserRank(rankIndex >= 0 ? rankIndex + 1 : null);
       } catch (error) {
         console.error('Error loading leaderboard:', error);
+
+        // Fallback: still show the current user with 0 points so the page
+        // never appears completely empty when signed in.
+        if (user) {
+          const fallbackStats: UserStats = {
+            totalDiscovered: 0,
+            discoveredThisWeek: 0,
+            points: 0,
+          };
+
+          const fallbackEntry: LeaderboardEntry = {
+            uid: user.uid,
+            displayName: user.displayName || 'You',
+            photoURL: user.photoURL || null,
+            points: fallbackStats.points,
+            totalDiscovered: fallbackStats.totalDiscovered,
+            discoveredThisWeek: fallbackStats.discoveredThisWeek,
+            rank: 1,
+          };
+
+          setLeaderboard([fallbackEntry]);
+          setUserStats(fallbackStats);
+          setUserRank(1);
+        }
       } finally {
         setLoading(false);
       }

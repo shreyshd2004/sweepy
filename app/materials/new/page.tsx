@@ -19,11 +19,18 @@ import { matchMaterialToCatalog, linkMaterialToCatalog, createCatalogEntry } fro
 import { MaterialMatchDialog } from '@/components/MaterialMatchDialog';
 import { MaterialMatchResult } from '@/lib/zodSchemas';
 
-// Helper function to get material name from counter (cycles: paper, plastic, cardboard)
+// Helper function to get material name from counter.
+// Pattern (counter starts at 1):
+// 1st item: manual
+// 2nd item: manual
+// 3rd item: \"Paper\"
+// 4th item: \"Plastic\"
+// then repeat (manual, manual, Paper, Plastic, ...)
 const getMaterialNameFromCounter = (counter: number): string => {
-  const materials = ['Paper', 'Plastic', 'Cardboard'];
-  const index = (counter - 1) % materials.length;
-  return materials[index];
+  const pos = (counter - 1) % 4;
+  if (pos === 2) return 'Paper';
+  if (pos === 3) return 'Plastic';
+  return '';
 };
 
 // Helper function to get and increment scan counter
@@ -63,18 +70,18 @@ export default function NewMaterialPage() {
   useEffect(() => {
     console.log('🟢 NewMaterialPage: useEffect running');
     
-    // Set auto-fill material name based on counter
+    // Default auto-fill material name based on local counter
     const counter = getScanCounter();
     const materialName = getMaterialNameFromCounter(counter);
-    setAutoFillMaterialName(materialName);
-    console.log('🟢 NewMaterialPage: Auto-filling material name:', materialName, 'from counter:', counter);
+    console.log('🟢 NewMaterialPage: Counter-based material name:', materialName, 'from counter:', counter);
     
     // CRITICAL: Check pathname FIRST - if we're on this page, NEVER redirect away
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
     const isOnNewMaterialPage = currentPath === '/materials/new' || currentPath === '/materials/new/';
     const urlHasScanned = typeof window !== 'undefined' && window.location.search.includes('scanned=1');
     const hasNavigationFlag = sessionStorage.getItem('navigatingToForm') === 'true';
-    const hasScanData = !!sessionStorage.getItem('scanAudioData');
+    const rawScanData = sessionStorage.getItem('scanAudioData');
+    const hasScanData = !!rawScanData;
     
     // Clear navigation flag since we've arrived
     if (hasNavigationFlag) {
@@ -89,24 +96,21 @@ export default function NewMaterialPage() {
       setLoading(false);
       
       // Load scan data immediately if available
-      if (hasScanData) {
+      if (rawScanData) {
         try {
-          const scanData = sessionStorage.getItem('scanAudioData');
-          if (scanData) {
-            const parsed = JSON.parse(scanData);
-            if (parsed.audioBlob) {
-              console.log('🟢 NewMaterialPage: Loading scan data immediately');
-              const byteCharacters = atob(parsed.audioBlob);
-              const byteNumbers = new Array(byteCharacters.length);
-              for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i);
-              }
-              const byteArray = new Uint8Array(byteNumbers);
-              const blob = new Blob([byteArray], { type: parsed.audioType || 'audio/wav' });
-              setAudioBlob(blob);
-              setAudioUrl(URL.createObjectURL(blob));
-              setHasScannedAudio(true);
+          const parsed = JSON.parse(rawScanData);
+          if (parsed.audioBlob) {
+            console.log('🟢 NewMaterialPage: Loading scan audio data immediately');
+            const byteCharacters = atob(parsed.audioBlob);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
             }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: parsed.audioType || 'audio/wav' });
+            setAudioBlob(blob);
+            setAudioUrl(URL.createObjectURL(blob));
+            setHasScannedAudio(true);
           }
         } catch (e) {
           console.error('🟢 NewMaterialPage: Failed to load scan data immediately:', e);
@@ -114,6 +118,8 @@ export default function NewMaterialPage() {
       }
     }
     
+    // Finally, commit the chosen auto-fill material name
+    setAutoFillMaterialName(materialName);
     console.log('🟢 NewMaterialPage: Initial check', { 
       isOnNewMaterialPage, 
       urlHasScanned, 
@@ -606,14 +612,31 @@ export default function NewMaterialPage() {
     scanStep
   });
 
+  const getBannerText = () => {
+    if (autoFillMaterialName === 'Paper') {
+      return 'You discovered paper! Describe it and add a photo.';
+    }
+    if (autoFillMaterialName === 'Plastic') {
+      return 'You discovered plastic! Describe it and add a photo.';
+    }
+    return 'You discovered a new material! Describe it and add a photo.';
+  };
+
   return (
     <div className="min-h-screen bg-white pb-20">
       <div className="px-4 py-6 max-w-md mx-auto">
         <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-4 text-center text-gray-700">
-          You Discovered A New Material! Describe it and add a photo.
+          {getBannerText()}
         </div>
-             {user && <MaterialForm onSubmit={handleSubmit} isLoading={isSubmitting} userId={user.uid} initialData={{ materialName: autoFillMaterialName }} />}
-             </div>
+        {user && (
+          <MaterialForm
+            onSubmit={handleSubmit}
+            isLoading={isSubmitting}
+            userId={user.uid}
+            initialData={{ materialName: autoFillMaterialName }}
+          />
+        )}
+      </div>
              {/* Material Match Dialog */}
              {showMatchDialog && (
                <MaterialMatchDialog

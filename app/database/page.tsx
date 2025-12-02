@@ -255,23 +255,10 @@ export default function DatabasePage() {
               <button
                 key={item.id}
                 onClick={() => handleMaterialClick(item)}
-                className={`relative bg-white border-2 rounded-xl p-3 transition-all ${
-                  item.isDiscovered
-                    ? 'border-green-400 hover:border-green-500 shadow-md'
-                    : 'border-gray-300 hover:border-gray-400 opacity-75'
-                }`}
+                className="relative bg-white border-2 border-gray-200 hover:border-green-400 rounded-xl p-3 transition-all shadow-sm"
               >
-                {/* Discovery Status */}
-                <div className="absolute top-2 right-2">
-                  {item.isDiscovered ? (
-                    <CheckCircle2 className="w-5 h-5 text-green-500" />
-                  ) : (
-                    <Circle className="w-5 h-5 text-gray-500" />
-                  )}
-                </div>
-
                 {/* Material Image */}
-                <div className={`w-full aspect-square bg-gray-100 rounded-lg mb-2 flex items-center justify-center overflow-hidden relative ${!item.isDiscovered ? 'opacity-80' : ''}`}>
+                <div className="w-full aspect-square bg-gray-100 rounded-lg mb-2 flex items-center justify-center overflow-hidden relative">
                   {imageUrls.get(item.id) ? (
                     <>
                       <img
@@ -297,7 +284,7 @@ export default function DatabasePage() {
 
                 {/* Material Info */}
                 <div className="text-left">
-                  <h3 className={`font-semibold text-sm mb-1 ${item.isDiscovered ? 'text-gray-900' : 'text-gray-500'}`}>
+                  <h3 className="font-semibold text-sm mb-1 text-gray-900">
                     {item.materialName}
                   </h3>
                   <div className="flex items-center gap-1 flex-wrap">
