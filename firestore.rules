@@ -3,8 +3,11 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Materials collection rules
     match /materials/{materialId} {
-      // Allow read, write, delete only if user is authenticated and owns the document
-      allow read, write, delete: if request.auth != null 
+      // Allow read for all authenticated users (needed for leaderboard)
+      allow read: if request.auth != null;
+      
+      // Allow write, delete only if user is authenticated and owns the document
+      allow write, delete: if request.auth != null 
         && request.auth.uid == resource.data.ownerUid;
       
       // Allow create only if user is authenticated and sets their own UID

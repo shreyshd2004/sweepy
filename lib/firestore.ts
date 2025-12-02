@@ -324,17 +324,50 @@ export const getLeaderboard = async (currentUserId?: string, limitCount: number 
       userStatsMap[uid] = { total, week, points };
     });
 
+    // Try to get user profiles for better display names
+    const userProfiles: Record<string, { displayName?: string; photoURL?: string }> = {};
+    try {
+      const profilePromises = Object.keys(userStatsMap).map(async (uid) => {
+        try {
+          const profile = await getUserProfile(uid);
+          if (profile) {
+            userProfiles[uid] = {
+              displayName: profile.fullName || profile.username || null,
+              photoURL: profile.photoURL || null,
+            };
+          }
+        } catch (err) {
+          // Ignore errors fetching individual profiles
+        }
+      });
+      await Promise.all(profilePromises);
+    } catch (err) {
+      console.warn('Error fetching user profiles for leaderboard:', err);
+    }
+
     // Convert to leaderboard entries
     const leaderboardEntries: LeaderboardEntry[] = Object.entries(userStatsMap)
-      .map(([uid, stats]) => ({
-        uid,
-        displayName: uid === currentUserId ? 'You' : `User ${uid.slice(0, 6)}`, // Show "You" for current user, otherwise show partial UID
-        photoURL: null,
-        points: stats.points,
-        totalDiscovered: stats.total,
-        discoveredThisWeek: stats.week,
-        rank: 0, // Will be set after sorting
-      }))
+      .map(([uid, stats]) => {
+        const profile = userProfiles[uid];
+        let displayName: string;
+        if (uid === currentUserId) {
+          displayName = 'You';
+        } else if (profile?.displayName) {
+          displayName = profile.displayName;
+        } else {
+          displayName = `User ${uid.slice(0, 8)}`;
+        }
+        
+        return {
+          uid,
+          displayName,
+          photoURL: profile?.photoURL || null,
+          points: stats.points,
+          totalDiscovered: stats.total,
+          discoveredThisWeek: stats.week,
+          rank: 0, // Will be set after sorting
+        };
+      })
       .sort((a, b) => b.points - a.points) // Sort by points descending
       .slice(0, limitCount)
       .map((entry, index) => ({
@@ -342,6 +375,7 @@ export const getLeaderboard = async (currentUserId?: string, limitCount: number 
         rank: index + 1,
       }));
 
+    console.log(`📊 Leaderboard: Found ${leaderboardEntries.length} users with materials`);
     return leaderboardEntries;
   } catch (error) {
     console.error('Error computing leaderboard:', error);

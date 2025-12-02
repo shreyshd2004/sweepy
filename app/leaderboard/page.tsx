@@ -27,25 +27,35 @@ export default function LeaderboardPage() {
       }
       
       try {
-        // Load leaderboard and user stats
-        const [rawLeaderboard, stats] = await Promise.all([
-          getLeaderboard(user.uid, 50), // Fetch a bit more so we can rank accurately
-          getUserStats(user.uid),
-        ]);
-
-        console.log('🔵 Leaderboard: getUserStats result:', stats);
-        console.log('🔵 Leaderboard: rawLeaderboard entries:', rawLeaderboard.length);
-
-        // ALWAYS use getUserStats for the current user to match profile exactly
-        // This ensures leaderboard and profile show the same points
-        if (!stats) {
-          console.warn('⚠️ Leaderboard: getUserStats returned null/undefined, using fallback');
+        // Load leaderboard first
+        const rawLeaderboard = await getLeaderboard(user.uid, 50);
+        
+        // Try to get user stats - if it fails, we'll use the leaderboard entry's stats
+        let stats: UserStats | null = null;
+        try {
+          stats = await getUserStats(user.uid);
+          console.log('🔵 Leaderboard: getUserStats result:', stats);
+        } catch (statsError) {
+          console.error('🔴 Leaderboard: getUserStats failed:', statsError);
+          // Continue - we'll use leaderboard entry stats as fallback
         }
-        const userStatsForLeaderboard: UserStats = stats || {
+
+        console.log('🔵 Leaderboard: rawLeaderboard entries:', rawLeaderboard.length);
+        console.log('🔵 Leaderboard: All users in leaderboard:', rawLeaderboard.map(e => ({ uid: e.uid.slice(0, 8), name: e.displayName, points: e.points })));
+
+        // Find current user in leaderboard first
+        const existingEntry = rawLeaderboard.find((entry) => entry.uid === user.uid);
+        
+        // ALWAYS use getUserStats if available (to match profile), otherwise use leaderboard entry stats
+        const userStatsForLeaderboard: UserStats = stats || (existingEntry ? {
+          totalDiscovered: existingEntry.totalDiscovered,
+          discoveredThisWeek: existingEntry.discoveredThisWeek,
+          points: existingEntry.points,
+        } : {
           totalDiscovered: 0,
           discoveredThisWeek: 0,
           points: 0,
-        };
+        });
         
         console.log('🔵 Leaderboard: Using stats for current user:', userStatsForLeaderboard);
 
@@ -88,6 +98,9 @@ export default function LeaderboardPage() {
             rank: index + 1,
           }));
 
+        console.log('🔵 Leaderboard: Final entries after processing:', entries.length);
+        console.log('🔵 Leaderboard: Final entries details:', entries.map(e => ({ uid: e.uid.slice(0, 8), name: e.displayName, points: e.points })));
+        
         setLeaderboard(entries);
 
         // Always use getUserStats for header to match profile exactly
@@ -175,7 +188,7 @@ export default function LeaderboardPage() {
       <div className="px-4 py-6">
         <div className="max-w-md mx-auto">
           {/* Your Entry - Always show at top if you're on leaderboard */}
-          {currentUserEntry && (
+          {(currentUserEntry || userStats) && (
             <div className="bg-green-50 rounded-xl border-2 border-green-300 p-4 flex items-center mb-4">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
                 {user?.photoURL ? (
@@ -186,10 +199,11 @@ export default function LeaderboardPage() {
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-gray-900">{user?.displayName || 'You'}</p>
-                <p className="text-xs text-gray-500">Rank #{currentUserEntry.rank}</p>
+                <p className="text-xs text-gray-500">Rank #{currentUserEntry?.rank || userRank || '—'}</p>
               </div>
               <div className="text-right">
-                <p className="text-green-600 font-bold text-lg">{currentUserEntry.points}</p>
+                {/* Prefer userStats.points (from getUserStats) to match profile exactly */}
+                <p className="text-green-600 font-bold text-lg">{userStats?.points ?? currentUserEntry?.points ?? 0}</p>
                 <p className="text-xs text-gray-500">points</p>
               </div>
             </div>
